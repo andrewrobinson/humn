@@ -50,7 +50,9 @@ func main() {
 			coord.Postcode = postcode
 			outputLine, _ := json.Marshal(coord)
 
-			if _, err = out.WriteString(string(outputLine) + "\n"); err != nil {
+			lineWithEnd := fmt.Sprintf("%s\n", outputLine)
+
+			if _, err = out.WriteString(lineWithEnd); err != nil {
 				fmt.Fprintln(os.Stderr, "error:", err)
 				os.Exit(1)
 			}
@@ -66,13 +68,8 @@ func main() {
 	}
 }
 
+//this is what you see in the "read-stdin" branch, before I pasted
 func main2() {
-
-	/*
-
-		This structure is how I wrote it before a big paste happened
-
-	*/
 
 	scanner := bufio.NewScanner(os.Stdin)
 	for scanner.Scan() {
