@@ -80,6 +80,11 @@ func main() {
 		// https://play.golang.org/p/OSS71nSpkV
 
 		22h10 - am wondering if chanOwnerChanConsumer or produceReceive() can help me
+
+		22h20 - back to reading https://gobyexample.com/channels
+
+
+
 	*/
 
 	rdr := bufio.NewReader(os.Stdin)
