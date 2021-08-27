@@ -8,49 +8,35 @@ import (
 	"os"
 
 	"github.com/andrewrobinson/humn/model"
-	"github.com/andrewrobinson/humn/util"
 )
 
-// TODO
-// cat coordinates.txt | ./your-program "api token" "pool size flag" > output.txt
+// cat coordinates.txt | ./humn "api token" "pool size flag" > output.txt
 
 func main() {
 
-	file, err := os.Open("coordinates.txt")
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-	defer file.Close()
-
-	scanner := bufio.NewScanner(file)
-
-	lineNumber := 0
-
+	scanner := bufio.NewScanner(os.Stdin)
 	for scanner.Scan() {
 
-		lineNumber++
 		line := scanner.Text()
 
 		coord := model.Coord{}
 		err := json.Unmarshal([]byte(line), &coord)
 		if err != nil {
+			//TODO - stderr
 			log.Fatalln(err)
 		}
 
-		postcode := util.GetPostcode(coord)
-		coord.Postcode = postcode
-		coordStr, _ := json.Marshal(coord)
-		fmt.Println(string(coordStr))
+		// postcode := util.GetPostcode(coord)
+		postcode := "code commented out"
 
-		if lineNumber == 4 {
-			break
-		}
+		coord.Postcode = postcode
+		outputLine, _ := json.Marshal(coord)
+		//TODO - stdout via a channel
+		fmt.Println(string(outputLine))
 
 	}
-
 	if err := scanner.Err(); err != nil {
-		fmt.Printf("error on line %v: %v", lineNumber, err)
+		log.Println(err)
 	}
 
 }
