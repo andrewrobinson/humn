@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 )
 
 // TODO
@@ -17,6 +18,22 @@ type Coord struct {
 	Lat      float64 `json:"lat"`
 	Lng      float64 `json:"lng"`
 	Postcode string  `json:"postcode"`
+}
+
+/*
+	{
+	"type": "FeatureCollection",
+	"query": [
+	"51582935",
+	"0465231"
+	],
+	"features": [],
+	"attribution": "NOTICE: © 2021 Mapbox and its suppliers. All rights reserved. Use of this data is subject to the Mapbox Terms of Service (https://www.mapbox.com/about/maps/). This response and the information it contains may not be retained. POI(s) provided by Foursquare."
+	}
+*/
+
+type MapbookResponse struct {
+	features []string `json:"features"`
 }
 
 func main() {
@@ -32,28 +49,26 @@ func main() {
 
 	lineNumber := 0
 
-	// { "lat": <float64>, "lng": <float64>, "postcode": <string> }
-
 	for scanner.Scan() {
 
 		lineNumber++
 		line := scanner.Text()
 
 		coord := Coord{}
-		json.Unmarshal([]byte(line), &coord)
+		err := json.Unmarshal([]byte(line), &coord)
+		if err != nil {
+			log.Fatalln(err)
+		}
 
 		url := getUrl(coord)
 		postcode := getPostcode(url)
 		coord.Postcode = postcode
-
-		// fmt.Printf("coord:%+v\n", coord)
-
 		coordStr, _ := json.Marshal(coord)
 		fmt.Println(string(coordStr))
 
-		// if lineNumber == 4 {
-		// 	break
-		// }
+		if lineNumber == 4 {
+			break
+		}
 
 	}
 
@@ -74,6 +89,11 @@ func getUrl(coord Coord) string {
 
 }
 
+func printBody(body []byte) {
+	sb := string(body)
+	log.Printf(sb)
+}
+
 func getPostcode(url string) string {
 	// fmt.Printf("getPostcode with url:%s", url)
 
@@ -81,14 +101,27 @@ func getPostcode(url string) string {
 	if err != nil {
 		log.Fatalln(err)
 	}
-	//We Read the response body on the line below.
+
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		log.Fatalln(err)
 	}
-	//Convert the body to type string
-	sb := string(body)
-	log.Printf(sb)
 
-	return "SE14 9AB"
+	// printBody(body)
+
+	mb := MapbookResponse{}
+	err = json.Unmarshal(body, &mb)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	postcode := strings.Join(mb.features, "-")
+
+	//TODO - I am getting back an empty 'features' from mapbox
+
+	// From the response https://docs.mapbox.com/api/search/geocoding/#geocoding-response-object
+	// the relevant field you should obtain is the `text` field from the single returned Feature.
+
+	// return "SE14 9XB"
+	return "TODO - find out why features is []:" + postcode
 }
