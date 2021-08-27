@@ -11,57 +11,6 @@ import (
 	"github.com/andrewrobinson/humn/model"
 )
 
-func produceReceive() {
-	//from Concurrency in Go
-	//ch4
-
-	chanOwner := func() <-chan int {
-		resultStream := make(chan int, 5)
-		go func() {
-			defer close(resultStream)
-			for i := 0; i <= 5; i++ {
-				resultStream <- i
-			}
-		}()
-		return resultStream
-	}
-
-	resultStream := chanOwner()
-	for result := range resultStream {
-		fmt.Printf("Received: %d\n", result)
-	}
-	fmt.Println("Done receiving!")
-
-}
-
-func chanOwnerChanConsumer() {
-	//from Concurrency in Go
-	//ch4 - confinement - 1
-	//this format keeps the responsibilities of the 2 roles
-
-	chanOwner := func() <-chan int {
-		results := make(chan int, 5)
-		go func() {
-			defer close(results)
-			for i := 0; i <= 5; i++ {
-				results <- i
-			}
-		}()
-		return results
-	}
-
-	consumer := func(results <-chan int) {
-		for result := range results {
-			fmt.Printf("Received: %d\n", result)
-		}
-		fmt.Println("Done receiving!")
-	}
-
-	results := chanOwner()
-	consumer(results)
-
-}
-
 // cat coordinates.txt | ./humn "api token" "pool size flag" > output.txt
 
 func main() {
@@ -124,4 +73,55 @@ func main() {
 			os.Exit(1)
 		}
 	}
+}
+
+func produceReceive() {
+	//from Concurrency in Go
+	//ch4
+
+	chanOwner := func() <-chan int {
+		resultStream := make(chan int, 5)
+		go func() {
+			defer close(resultStream)
+			for i := 0; i <= 5; i++ {
+				resultStream <- i
+			}
+		}()
+		return resultStream
+	}
+
+	resultStream := chanOwner()
+	for result := range resultStream {
+		fmt.Printf("Received: %d\n", result)
+	}
+	fmt.Println("Done receiving!")
+
+}
+
+func chanOwnerChanConsumer() {
+	//from Concurrency in Go
+	//ch4 - confinement - 1
+	//this format keeps the responsibilities of the 2 roles
+
+	chanOwner := func() <-chan int {
+		results := make(chan int, 5)
+		go func() {
+			defer close(results)
+			for i := 0; i <= 5; i++ {
+				results <- i
+			}
+		}()
+		return results
+	}
+
+	consumer := func(results <-chan int) {
+		for result := range results {
+			fmt.Printf("Received: %d\n", result)
+		}
+		fmt.Println("Done receiving!")
+	}
+
+	results := chanOwner()
+	consumer(results)
+
 }
