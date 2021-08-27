@@ -11,6 +11,57 @@ import (
 	"github.com/andrewrobinson/humn/model"
 )
 
+func produceReceive() {
+	//from Concurrency in Go
+	//ch4
+
+	chanOwner := func() <-chan int {
+		resultStream := make(chan int, 5)
+		go func() {
+			defer close(resultStream)
+			for i := 0; i <= 5; i++ {
+				resultStream <- i
+			}
+		}()
+		return resultStream
+	}
+
+	resultStream := chanOwner()
+	for result := range resultStream {
+		fmt.Printf("Received: %d\n", result)
+	}
+	fmt.Println("Done receiving!")
+
+}
+
+func chanOwnerChanConsumer() {
+	//from Concurrency in Go
+	//ch4 - confinement - 1
+	//this format keeps the responsibilities of the 2 roles
+
+	chanOwner := func() <-chan int {
+		results := make(chan int, 5)
+		go func() {
+			defer close(results)
+			for i := 0; i <= 5; i++ {
+				results <- i
+			}
+		}()
+		return results
+	}
+
+	consumer := func(results <-chan int) {
+		for result := range results {
+			fmt.Printf("Received: %d\n", result)
+		}
+		fmt.Println("Done receiving!")
+	}
+
+	results := chanOwner()
+	consumer(results)
+
+}
+
 // cat coordinates.txt | ./humn "api token" "pool size flag" > output.txt
 
 func main() {
@@ -27,6 +78,8 @@ func main() {
 
 		//Then I used this as a base. It doesn't actually use channels yet....
 		// https://play.golang.org/p/OSS71nSpkV
+
+		22h10 - am wondering if chanOwnerChanConsumer or produceReceive() can help me
 	*/
 
 	rdr := bufio.NewReader(os.Stdin)
@@ -66,34 +119,4 @@ func main() {
 			os.Exit(1)
 		}
 	}
-}
-
-//this is what you see in the "read-stdin" branch, before I pasted
-func main2() {
-
-	scanner := bufio.NewScanner(os.Stdin)
-	for scanner.Scan() {
-
-		line := scanner.Text()
-
-		coord := model.Coord{}
-		err := json.Unmarshal([]byte(line), &coord)
-		if err != nil {
-			//TODO - stderr
-			log.Fatalln(err)
-		}
-
-		// postcode := util.GetPostcode(coord)
-		postcode := "code commented out"
-
-		coord.Postcode = postcode
-		outputLine, _ := json.Marshal(coord)
-		//TODO - stdout via a channel
-		fmt.Println(string(outputLine))
-
-	}
-	if err := scanner.Err(); err != nil {
-		log.Println(err)
-	}
-
 }
