@@ -26,6 +26,8 @@ func main() {
 			log.Fatalln(err)
 		}
 
+		//am not getting postcode back from the api
+		//and also don't want to hit the api all the time, so commented for now
 		// postcode := util.GetPostcode(coord)
 		postcode := "code commented out"
 
