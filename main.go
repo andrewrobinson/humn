@@ -16,10 +16,9 @@ func main() {
 		Usage:
 
 		go build
-		cat coordinates.txt | ./humn --apiToken=x --poolSize=4 > output.txt
+		cat coordinates.txt | ./humn --apiToken=x --poolSize=10 > output.txt
 
 		token is: pk.eyJ1IjoiYW5kcmV3bWNyb2JpbnNvbiIsImEiOiJja3N1bjlubG4wbnRrMnZsc3pwbnVscXJ1In0.9IqlyGEbz7lfcRGcHZdJPQ
-
 
 	*/
 
@@ -47,7 +46,7 @@ func runJobsConcurrently(coordJobsFromStdin []model.Coord, poolSize int, apiToke
 	// modified version of https://gobyexample.com/worker-pools
 
 	numJobs := len(coordJobsFromStdin)
-	fmt.Printf("numJobs:%d, poolSize:%d\n", numJobs, poolSize)
+	// fmt.Printf("numJobs:%d, poolSize:%d\n", numJobs, poolSize)
 
 	jobs := make(chan model.Coord, numJobs)
 	results := make(chan model.Coord, numJobs)
@@ -56,8 +55,8 @@ func runJobsConcurrently(coordJobsFromStdin []model.Coord, poolSize int, apiToke
 		go worker(w, jobs, results, apiToken)
 	}
 
-	for j := 1; j <= numJobs; j++ {
-		jobs <- coordJobsFromStdin[j-1]
+	for j := 0; j < numJobs; j++ {
+		jobs <- coordJobsFromStdin[j]
 	}
 
 	close(jobs)
