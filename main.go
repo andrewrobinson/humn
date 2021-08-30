@@ -8,12 +8,48 @@ import (
 	"io"
 	"log"
 	"os"
+	"strconv"
+	"time"
 
 	"github.com/andrewrobinson/humn/model"
 	"github.com/andrewrobinson/humn/util"
 )
 
+func worker(id int, jobs <-chan string, results chan<- string) {
+	// https://gobyexample.com/worker-pools
+
+	for j := range jobs {
+		fmt.Println("worker", id, "started  job", j)
+		time.Sleep(time.Second)
+		ret := j + "_x"
+		fmt.Printf("worker:%d finished job:%s return was:%s\n", id, j, ret)
+		results <- ret
+	}
+}
+
 func main() {
+
+	const numJobs = 5
+	jobs := make(chan string, numJobs)
+	results := make(chan string, numJobs)
+
+	for w := 1; w <= 3; w++ {
+		go worker(w, jobs, results)
+	}
+
+	for j := 1; j <= numJobs; j++ {
+		jobs <- strconv.Itoa(j) + "_j"
+	}
+
+	close(jobs)
+
+	for a := 1; a <= numJobs; a++ {
+		<-results
+	}
+
+}
+
+func main2() {
 
 	/*
 
