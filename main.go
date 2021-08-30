@@ -21,6 +21,9 @@ func main() {
 		go build
 		cat coordinates.txt | ./humn --apiToken=asd --poolSize=4 > output.txt
 
+		token is: pk.eyJ1IjoiYW5kcmV3bWNyb2JpbnNvbiIsImEiOiJja3N1bjlubG4wbnRrMnZsc3pwbnVscXJ1In0.9IqlyGEbz7lfcRGcHZdJPQ
+
+
 	*/
 
 	apiTokenFlag := flag.String("apiToken", "", "no default")
