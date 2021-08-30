@@ -42,7 +42,7 @@ func GetJobsFormStdin(apiToken string) []model.Coord {
 
 }
 
-func GetPostcode(coord model.Coord, apiTokenFlag string, poolSizeFlag int) string {
+func GetPostcode(coord model.Coord, apiTokenFlag string) string {
 
 	resp, err := http.Get(coord.Url)
 	if err != nil {

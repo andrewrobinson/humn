@@ -1,14 +1,9 @@
 package main
 
 import (
-	"bufio"
-	"encoding/json"
 	"flag"
 	"fmt"
-	"io"
-	"log"
 	"os"
-	"time"
 
 	"github.com/andrewrobinson/humn/model"
 	"github.com/andrewrobinson/humn/util"
@@ -20,7 +15,7 @@ func main() {
 		Usage:
 
 		go build
-		cat coordinates.txt | ./humn --apiToken=asd --poolSize=4 > output.txt
+		cat coordinates.txt | ./humn --apiToken=x --poolSize=4 > output.txt
 
 		token is: pk.eyJ1IjoiYW5kcmV3bWNyb2JpbnNvbiIsImEiOiJja3N1bjlubG4wbnRrMnZsc3pwbnVscXJ1In0.9IqlyGEbz7lfcRGcHZdJPQ
 
@@ -30,49 +25,58 @@ func main() {
 	apiTokenFlag := flag.String("apiToken", "", "no default")
 	poolSizeFlag := flag.Int("poolSize", 5, "The number of goroutine for the worker pool")
 
-	poolSize := *poolSizeFlag
-
 	flag.Parse()
+
+	poolSize := *poolSizeFlag
+	apiToken := *apiTokenFlag
 
 	if flag.Lookup("apiToken").Value.String() == "" {
 		fmt.Println("--apiToken flag is required")
 		os.Exit(1)
 	}
 
-	jobsFromStdin := util.GetJobsFormStdin(*apiTokenFlag)
-	fmt.Printf("jobsFromStdin:%+v\n", jobsFromStdin)
+	jobsFromStdin := util.GetJobsFormStdin(apiToken)
+	// fmt.Printf("jobsFromStdin:%+v\n", jobsFromStdin)
+
+	runJobsConcurrently(jobsFromStdin, poolSize, apiToken)
+
+}
+
+func runJobsConcurrently(jobsFromStdin []model.Coord, poolSize int, apiToken string) {
 
 	numJobs := len(jobsFromStdin)
 	fmt.Printf("numJobs:%d, poolSize:%d\n", numJobs, poolSize)
 
-	// jobs := make(chan model.Coord, numJobs)
-	// results := make(chan model.Coord, numJobs)
+	jobs := make(chan model.Coord, numJobs)
+	results := make(chan model.Coord, numJobs)
 
-	// for w := 1; w <= poolSize; w++ {
-	// 	go worker(w, jobs, results)
-	// }
+	for w := 1; w <= poolSize; w++ {
+		go worker(w, jobs, results, apiToken)
+	}
 
-	// for j := 1; j <= numJobs; j++ {
-	// 	jobs <- jobsFromStdin[j]
-	// }
+	for j := 1; j <= numJobs; j++ {
+		jobs <- jobsFromStdin[j]
+	}
 
-	// close(jobs)
+	close(jobs)
 
-	// for a := 1; a <= numJobs; a++ {
-	// 	<-results
-	// }
+	for a := 1; a <= numJobs; a++ {
+		<-results
+	}
 
 }
 
-func worker(id int, jobs <-chan model.Coord, results chan<- model.Coord) {
+func worker(id int, jobs <-chan model.Coord, results chan<- model.Coord, apiToken string) {
 	// https://gobyexample.com/worker-pools
 
-	for j := range jobs {
-		fmt.Println("worker", id, "started  job", j)
-		time.Sleep(time.Second)
-		j.Postcode = "TODO"
-		fmt.Printf("worker:%d finished job:%+v return was:%s\n", id, j)
-		results <- j
+	for coord := range jobs {
+		fmt.Println("worker", id, "started  job", coord)
+
+		postcode := util.GetPostcode(coord, apiToken)
+		coord.Postcode = postcode
+
+		fmt.Printf("worker:%d finished job:%+v\n", id, coord)
+		results <- coord
 	}
 }
 
@@ -86,58 +90,58 @@ func worker(id int, jobs <-chan model.Coord, results chan<- model.Coord) {
 // //TODO - stdout via a channel
 // fmt.Println(string(outputLine))
 
-func main3() {
+// func main3() {
 
-	apiTokenFlag := flag.String("apiToken", "", "no default")
-	poolSizeFlag := flag.Int("poolSize", 5, "The number of goroutine for the worker pool")
+// 	apiTokenFlag := flag.String("apiToken", "", "no default")
+// 	poolSizeFlag := flag.Int("poolSize", 5, "The number of goroutine for the worker pool")
 
-	flag.Parse()
+// 	flag.Parse()
 
-	if flag.Lookup("apiToken").Value.String() == "" {
-		fmt.Println("--apiToken flag is required")
-		os.Exit(1)
-	}
+// 	if flag.Lookup("apiToken").Value.String() == "" {
+// 		fmt.Println("--apiToken flag is required")
+// 		os.Exit(1)
+// 	}
 
-	// fmt.Printf("apiTokenFlag:%s, poolSizeFlag:%d\n\n", *apiTokenFlag, *poolSizeFlag)
+// 	// fmt.Printf("apiTokenFlag:%s, poolSizeFlag:%d\n\n", *apiTokenFlag, *poolSizeFlag)
 
-	rdr := bufio.NewReader(os.Stdin)
-	out := os.Stdout
+// 	rdr := bufio.NewReader(os.Stdin)
+// 	out := os.Stdout
 
-	for {
-		switch line, err := rdr.ReadString('\n'); err {
+// 	for {
+// 		switch line, err := rdr.ReadString('\n'); err {
 
-		case nil:
+// 		case nil:
 
-			coord := model.Coord{}
-			err := json.Unmarshal([]byte(line), &coord)
-			if err != nil {
-				//TODO - stderr
-				log.Fatalln(err)
-			}
+// 			coord := model.Coord{}
+// 			err := json.Unmarshal([]byte(line), &coord)
+// 			if err != nil {
+// 				//TODO - stderr
+// 				log.Fatalln(err)
+// 			}
 
-			postcode := util.GetPostcode(coord, *apiTokenFlag, *poolSizeFlag)
-			// postcode := "code commented out"
+// 			postcode := util.GetPostcode(coord, *apiTokenFlag, *poolSizeFlag)
+// 			// postcode := "code commented out"
 
-			coord.Postcode = postcode
-			outputLine, _ := json.Marshal(coord)
+// 			coord.Postcode = postcode
+// 			outputLine, _ := json.Marshal(coord)
 
-			lineWithEnd := fmt.Sprintf("%s\n", outputLine)
+// 			lineWithEnd := fmt.Sprintf("%s\n", outputLine)
 
-			if _, err = out.WriteString(lineWithEnd); err != nil {
-				fmt.Fprintln(os.Stderr, "error:", err)
-				os.Exit(1)
-			}
+// 			if _, err = out.WriteString(lineWithEnd); err != nil {
+// 				fmt.Fprintln(os.Stderr, "error:", err)
+// 				os.Exit(1)
+// 			}
 
-		case io.EOF:
-			os.Exit(0)
+// 		case io.EOF:
+// 			os.Exit(0)
 
-		// Otherwise there's a problem
-		default:
-			fmt.Fprintln(os.Stderr, "error:", err)
-			os.Exit(1)
-		}
-	}
-}
+// 		// Otherwise there's a problem
+// 		default:
+// 			fmt.Fprintln(os.Stderr, "error:", err)
+// 			os.Exit(1)
+// 		}
+// 	}
+// }
 
 // func produceReceive() {
 // 	//from Concurrency in Go
