@@ -10,6 +10,7 @@ import (
 	"os"
 
 	"github.com/andrewrobinson/humn/model"
+	"github.com/andrewrobinson/humn/util"
 )
 
 func main() {
@@ -36,7 +37,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	fmt.Printf("apiTokenFlag:%s, poolSizeFlag:%d\n\n", *apiTokenFlag, *poolSizeFlag)
+	// fmt.Printf("apiTokenFlag:%s, poolSizeFlag:%d\n\n", *apiTokenFlag, *poolSizeFlag)
 
 	rdr := bufio.NewReader(os.Stdin)
 	out := os.Stdout
@@ -53,8 +54,8 @@ func main() {
 				log.Fatalln(err)
 			}
 
-			// postcode := util.GetPostcode(coord)
-			postcode := "code commented out"
+			postcode := util.GetPostcode(coord, *apiTokenFlag, *poolSizeFlag)
+			// postcode := "code commented out"
 
 			coord.Postcode = postcode
 			outputLine, _ := json.Marshal(coord)

@@ -11,10 +11,9 @@ import (
 	"github.com/andrewrobinson/humn/model"
 )
 
-func GetPostcode(coord model.Coord) string {
-	// fmt.Printf("getPostcode with url:%s", url)
+func GetPostcode(coord model.Coord, apiTokenFlag string, poolSizeFlag int) string {
 
-	url := getUrl(coord)
+	url := buildMapboxUrl(coord, apiTokenFlag)
 
 	resp, err := http.Get(url)
 	if err != nil {
@@ -45,11 +44,7 @@ func GetPostcode(coord model.Coord) string {
 	return "TODO - find out why features is []:" + postcode
 }
 
-func getUrl(coord model.Coord) string {
-
-	token := "pk.eyJ1IjoiYW5kcmV3bWNyb2JpbnNvbiIsImEiOiJja3N1bjlubG4wbnRrMnZsc3pwbnVscXJ1In0.9IqlyGEbz7lfcRGcHZdJPQ"
-
-	// https://docs.mapbox.com/api/search/#geocoding
+func buildMapboxUrl(coord model.Coord, token string) string {
 
 	urlTemplate := "https://api.mapbox.com/geocoding/v5/mapbox.places/<%f,%f>.json?types=postcode&limit=1&access_token=%s"
 	return fmt.Sprintf(urlTemplate, coord.Lat, coord.Lng, token)
