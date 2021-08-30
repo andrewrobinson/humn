@@ -64,12 +64,10 @@ func runJobsConcurrently(coordJobsFromStdin []model.Coord, poolSize int, apiToke
 	fmt.Println("pulling lines from <- results")
 	for a := 1; a <= numJobs; a++ {
 		line := <-results
-		fmt.Printf("line:%+v", line)
+		fmt.Printf("line:%+v\n", line)
 	}
 
 	fmt.Println("finished")
-
-	// fmt.Printf("Results:%+v", results)
 
 }
 
@@ -78,12 +76,10 @@ func worker(id int, jobs <-chan model.Coord, results chan<- model.Coord, apiToke
 
 	for coord := range jobs {
 		// fmt.Println("worker", id, "started  job", coord)
-
 		postcode := util.GetPostcode(coord, apiToken)
 		// fmt.Printf("postcode looked up:%s", postcode)
 		coord.Postcode = postcode
-
-		fmt.Printf("worker:%d finished job:%+v\n", id, coord)
+		// fmt.Printf("worker:%d finished job:%+v\n", id, coord)
 		results <- coord
 	}
 }
