@@ -16,7 +16,7 @@ func main() {
 		Usage:
 
 		go build
-		cat coordinates.txt | ./humn --apiToken=x --poolSize=10 > output.txt
+		cat coordinates.txt | ./humn --apiToken=x --poolSize=100 > output.txt
 
 		token is: pk.eyJ1IjoiYW5kcmV3bWNyb2JpbnNvbiIsImEiOiJja3N1bjlubG4wbnRrMnZsc3pwbnVscXJ1In0.9IqlyGEbz7lfcRGcHZdJPQ
 
