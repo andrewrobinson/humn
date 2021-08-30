@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
 	"os"
@@ -61,13 +62,16 @@ func runJobsConcurrently(coordJobsFromStdin []model.Coord, poolSize int, apiToke
 
 	close(jobs)
 
-	fmt.Println("pulling lines from <- results")
 	for a := 1; a <= numJobs; a++ {
-		line := <-results
-		fmt.Printf("line:%+v\n", line)
-	}
+		coord := <-results
 
-	fmt.Println("finished")
+		outputLine, _ := json.Marshal(coord)
+
+		fmt.Printf("%s\n", outputLine)
+		// lineWithEnd := fmt.Sprintf("%s\n", outputLine)
+
+		// fmt.Printf("line:%+v\n", line)
+	}
 
 }
 

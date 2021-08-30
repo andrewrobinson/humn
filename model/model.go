@@ -3,8 +3,8 @@ package model
 type Coord struct {
 	Lat      float64 `json:"lat"`
 	Lng      float64 `json:"lng"`
-	Url      string
-	Postcode string `json:"postcode"`
+	Url      string  `json:"-"`
+	Postcode string  `json:"postcode"`
 }
 
 /*
