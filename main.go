@@ -32,7 +32,7 @@ func main() {
 	flag.Parse()
 
 	if flag.Lookup("apiToken").Value.String() == "" {
-		fmt.Println("apiToken NOT present")
+		fmt.Println("--apiToken flag is required")
 		os.Exit(1)
 	}
 
