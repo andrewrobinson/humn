@@ -8,6 +8,9 @@ type Coord struct {
 }
 
 /*
+
+	I am getting empty features back
+
 	{
 	"type": "FeatureCollection",
 	"query": [

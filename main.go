@@ -18,7 +18,7 @@ func main() {
 		go build
 		cat coordinates.txt | ./humn --apiToken=x --poolSize=100 > output.txt
 
-		token is: pk.eyJ1IjoiYW5kcmV3bWNyb2JpbnNvbiIsImEiOiJja3N1bjlubG4wbnRrMnZsc3pwbnVscXJ1In0.9IqlyGEbz7lfcRGcHZdJPQ
+		my token is: pk.eyJ1IjoiYW5kcmV3bWNyb2JpbnNvbiIsImEiOiJja3N1bjlubG4wbnRrMnZsc3pwbnVscXJ1In0.9IqlyGEbz7lfcRGcHZdJPQ
 
 	*/
 
@@ -35,8 +35,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	coordJobsFromStdin := util.GetJobsFormStdin(apiToken)
-	// fmt.Printf("jobsFromStdin:%+v\n", jobsFromStdin)
+	coordJobsFromStdin := util.GetJobsFromStdin(apiToken)
 
 	runJobsConcurrently(coordJobsFromStdin, poolSize, apiToken)
 
@@ -63,13 +62,8 @@ func runJobsConcurrently(coordJobsFromStdin []model.Coord, poolSize int, apiToke
 
 	for a := 1; a <= numJobs; a++ {
 		coord := <-results
-
 		outputLine, _ := json.Marshal(coord)
-
 		fmt.Printf("%s\n", outputLine)
-		// lineWithEnd := fmt.Sprintf("%s\n", outputLine)
-
-		// fmt.Printf("line:%+v\n", line)
 	}
 
 }

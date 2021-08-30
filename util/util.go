@@ -13,7 +13,7 @@ import (
 	"github.com/andrewrobinson/humn/model"
 )
 
-func GetJobsFormStdin(apiToken string) []model.Coord {
+func GetJobsFromStdin(apiToken string) []model.Coord {
 
 	var jobs []model.Coord
 
@@ -54,22 +54,15 @@ func GetPostcode(coord model.Coord, apiTokenFlag string) string {
 		log.Fatalln(err)
 	}
 
-	// printBody(body)
-
 	mb := model.MapbookResponse{}
 	err = json.Unmarshal(body, &mb)
 	if err != nil {
 		log.Fatalln(err)
 	}
 
+	//not the right thing, but features is coming back empty currently
 	postcode := strings.Join(mb.Features, "-")
 
-	//TODO - I am getting back an empty 'features' from mapbox
-
-	// From the response https://docs.mapbox.com/api/search/geocoding/#geocoding-response-object
-	// the relevant field you should obtain is the `text` field from the single returned Feature.
-
-	// return "SE14 9XB"
 	return "TODO - find out why features is []:" + postcode
 }
 
@@ -79,8 +72,3 @@ func buildMapboxUrl(coord model.Coord, token string) string {
 	return fmt.Sprintf(urlTemplate, coord.Lat, coord.Lng, token)
 
 }
-
-// func printBody(body []byte) {
-// 	sb := string(body)
-// 	log.Printf(sb)
-// }
