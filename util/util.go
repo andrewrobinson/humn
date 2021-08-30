@@ -1,21 +1,50 @@
 package util
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 	"strings"
 
 	"github.com/andrewrobinson/humn/model"
 )
 
+func GetJobsFormStdin(apiToken string) []model.Coord {
+
+	var jobs []model.Coord
+
+	scanner := bufio.NewScanner(os.Stdin)
+	for scanner.Scan() {
+
+		line := scanner.Text()
+
+		coord := model.Coord{}
+		err := json.Unmarshal([]byte(line), &coord)
+		if err != nil {
+			log.Fatalln(err)
+		}
+
+		url := buildMapboxUrl(coord, apiToken)
+		coord.Url = url
+
+		jobs = append(jobs, coord)
+
+	}
+	if err := scanner.Err(); err != nil {
+		log.Println(err)
+	}
+
+	return jobs
+
+}
+
 func GetPostcode(coord model.Coord, apiTokenFlag string, poolSizeFlag int) string {
 
-	url := buildMapboxUrl(coord, apiTokenFlag)
-
-	resp, err := http.Get(url)
+	resp, err := http.Get(coord.Url)
 	if err != nil {
 		log.Fatalln(err)
 	}

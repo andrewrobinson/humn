@@ -8,49 +8,13 @@ import (
 	"io"
 	"log"
 	"os"
-	"strconv"
 	"time"
 
 	"github.com/andrewrobinson/humn/model"
 	"github.com/andrewrobinson/humn/util"
 )
 
-func worker(id int, jobs <-chan string, results chan<- string) {
-	// https://gobyexample.com/worker-pools
-
-	for j := range jobs {
-		fmt.Println("worker", id, "started  job", j)
-		time.Sleep(time.Second)
-		ret := j + "_x"
-		fmt.Printf("worker:%d finished job:%s return was:%s\n", id, j, ret)
-		results <- ret
-	}
-}
-
 func main() {
-
-	const numJobs = 5
-	jobs := make(chan string, numJobs)
-	results := make(chan string, numJobs)
-
-	for w := 1; w <= 3; w++ {
-		go worker(w, jobs, results)
-	}
-
-	for j := 1; j <= numJobs; j++ {
-		jobs <- strconv.Itoa(j) + "_j"
-	}
-
-	close(jobs)
-
-	for a := 1; a <= numJobs; a++ {
-		<-results
-	}
-
-}
-
-func main2() {
-
 	/*
 
 		Usage:
@@ -62,6 +26,67 @@ func main2() {
 
 
 	*/
+
+	apiTokenFlag := flag.String("apiToken", "", "no default")
+	poolSizeFlag := flag.Int("poolSize", 5, "The number of goroutine for the worker pool")
+
+	poolSize := *poolSizeFlag
+
+	flag.Parse()
+
+	if flag.Lookup("apiToken").Value.String() == "" {
+		fmt.Println("--apiToken flag is required")
+		os.Exit(1)
+	}
+
+	jobsFromStdin := util.GetJobsFormStdin(*apiTokenFlag)
+	fmt.Printf("jobsFromStdin:%+v\n", jobsFromStdin)
+
+	numJobs := len(jobsFromStdin)
+	fmt.Printf("numJobs:%d, poolSize:%d\n", numJobs, poolSize)
+
+	// jobs := make(chan model.Coord, numJobs)
+	// results := make(chan model.Coord, numJobs)
+
+	// for w := 1; w <= poolSize; w++ {
+	// 	go worker(w, jobs, results)
+	// }
+
+	// for j := 1; j <= numJobs; j++ {
+	// 	jobs <- jobsFromStdin[j]
+	// }
+
+	// close(jobs)
+
+	// for a := 1; a <= numJobs; a++ {
+	// 	<-results
+	// }
+
+}
+
+func worker(id int, jobs <-chan model.Coord, results chan<- model.Coord) {
+	// https://gobyexample.com/worker-pools
+
+	for j := range jobs {
+		fmt.Println("worker", id, "started  job", j)
+		time.Sleep(time.Second)
+		j.Postcode = "TODO"
+		fmt.Printf("worker:%d finished job:%+v return was:%s\n", id, j)
+		results <- j
+	}
+}
+
+// //am not getting postcode back from the api
+// //and also don't want to hit the api all the time, so commented for now
+// // postcode := util.GetPostcode(coord)
+// postcode := "code commented out"
+
+// coord.Postcode = postcode
+// outputLine, _ := json.Marshal(coord)
+// //TODO - stdout via a channel
+// fmt.Println(string(outputLine))
+
+func main3() {
 
 	apiTokenFlag := flag.String("apiToken", "", "no default")
 	poolSizeFlag := flag.Int("poolSize", 5, "The number of goroutine for the worker pool")
