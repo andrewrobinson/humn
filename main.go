@@ -35,16 +35,17 @@ func main() {
 		os.Exit(1)
 	}
 
-	jobsFromStdin := util.GetJobsFormStdin(apiToken)
+	coordJobsFromStdin := util.GetJobsFormStdin(apiToken)
 	// fmt.Printf("jobsFromStdin:%+v\n", jobsFromStdin)
 
-	runJobsConcurrently(jobsFromStdin, poolSize, apiToken)
+	runJobsConcurrently(coordJobsFromStdin, poolSize, apiToken)
 
 }
 
-func runJobsConcurrently(jobsFromStdin []model.Coord, poolSize int, apiToken string) {
+func runJobsConcurrently(coordJobsFromStdin []model.Coord, poolSize int, apiToken string) {
+	// modified version of https://gobyexample.com/worker-pools
 
-	numJobs := len(jobsFromStdin)
+	numJobs := len(coordJobsFromStdin)
 	fmt.Printf("numJobs:%d, poolSize:%d\n", numJobs, poolSize)
 
 	jobs := make(chan model.Coord, numJobs)
@@ -55,141 +56,34 @@ func runJobsConcurrently(jobsFromStdin []model.Coord, poolSize int, apiToken str
 	}
 
 	for j := 1; j <= numJobs; j++ {
-		jobs <- jobsFromStdin[j]
+		jobs <- coordJobsFromStdin[j-1]
 	}
 
 	close(jobs)
 
+	fmt.Println("pulling lines from <- results")
 	for a := 1; a <= numJobs; a++ {
-		<-results
+		line := <-results
+		fmt.Printf("line:%+v", line)
 	}
+
+	fmt.Println("finished")
+
+	// fmt.Printf("Results:%+v", results)
 
 }
 
 func worker(id int, jobs <-chan model.Coord, results chan<- model.Coord, apiToken string) {
-	// https://gobyexample.com/worker-pools
+	// modified version of https://gobyexample.com/worker-pools
 
 	for coord := range jobs {
-		fmt.Println("worker", id, "started  job", coord)
+		// fmt.Println("worker", id, "started  job", coord)
 
 		postcode := util.GetPostcode(coord, apiToken)
+		// fmt.Printf("postcode looked up:%s", postcode)
 		coord.Postcode = postcode
 
 		fmt.Printf("worker:%d finished job:%+v\n", id, coord)
 		results <- coord
 	}
 }
-
-// //am not getting postcode back from the api
-// //and also don't want to hit the api all the time, so commented for now
-// // postcode := util.GetPostcode(coord)
-// postcode := "code commented out"
-
-// coord.Postcode = postcode
-// outputLine, _ := json.Marshal(coord)
-// //TODO - stdout via a channel
-// fmt.Println(string(outputLine))
-
-// func main3() {
-
-// 	apiTokenFlag := flag.String("apiToken", "", "no default")
-// 	poolSizeFlag := flag.Int("poolSize", 5, "The number of goroutine for the worker pool")
-
-// 	flag.Parse()
-
-// 	if flag.Lookup("apiToken").Value.String() == "" {
-// 		fmt.Println("--apiToken flag is required")
-// 		os.Exit(1)
-// 	}
-
-// 	// fmt.Printf("apiTokenFlag:%s, poolSizeFlag:%d\n\n", *apiTokenFlag, *poolSizeFlag)
-
-// 	rdr := bufio.NewReader(os.Stdin)
-// 	out := os.Stdout
-
-// 	for {
-// 		switch line, err := rdr.ReadString('\n'); err {
-
-// 		case nil:
-
-// 			coord := model.Coord{}
-// 			err := json.Unmarshal([]byte(line), &coord)
-// 			if err != nil {
-// 				//TODO - stderr
-// 				log.Fatalln(err)
-// 			}
-
-// 			postcode := util.GetPostcode(coord, *apiTokenFlag, *poolSizeFlag)
-// 			// postcode := "code commented out"
-
-// 			coord.Postcode = postcode
-// 			outputLine, _ := json.Marshal(coord)
-
-// 			lineWithEnd := fmt.Sprintf("%s\n", outputLine)
-
-// 			if _, err = out.WriteString(lineWithEnd); err != nil {
-// 				fmt.Fprintln(os.Stderr, "error:", err)
-// 				os.Exit(1)
-// 			}
-
-// 		case io.EOF:
-// 			os.Exit(0)
-
-// 		// Otherwise there's a problem
-// 		default:
-// 			fmt.Fprintln(os.Stderr, "error:", err)
-// 			os.Exit(1)
-// 		}
-// 	}
-// }
-
-// func produceReceive() {
-// 	//from Concurrency in Go
-// 	//ch4
-
-// 	chanOwner := func() <-chan int {
-// 		resultStream := make(chan int, 5)
-// 		go func() {
-// 			defer close(resultStream)
-// 			for i := 0; i <= 5; i++ {
-// 				resultStream <- i
-// 			}
-// 		}()
-// 		return resultStream
-// 	}
-
-// 	resultStream := chanOwner()
-// 	for result := range resultStream {
-// 		fmt.Printf("Received: %d\n", result)
-// 	}
-// 	fmt.Println("Done receiving!")
-
-// }
-
-// func chanOwnerChanConsumer() {
-// 	//from Concurrency in Go
-// 	//ch4 - confinement - 1
-// 	//this format keeps the responsibilities of the 2 roles
-
-// 	chanOwner := func() <-chan int {
-// 		results := make(chan int, 5)
-// 		go func() {
-// 			defer close(results)
-// 			for i := 0; i <= 5; i++ {
-// 				results <- i
-// 			}
-// 		}()
-// 		return results
-// 	}
-
-// 	consumer := func(results <-chan int) {
-// 		for result := range results {
-// 			fmt.Printf("Received: %d\n", result)
-// 		}
-// 		fmt.Println("Done receiving!")
-// 	}
-
-// 	results := chanOwner()
-// 	consumer(results)
-
-// }
